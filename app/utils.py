@@ -1,6 +1,41 @@
+import time
 import requests
 import numpy as np
 import pandas as pd
+from threading import Semaphore
+
+API_LIMIT = 60  # Solicitudes por segundo
+ERROR_LIMIT = 344  # Solicitudes por segundo en caso de error
+semaphore = Semaphore(API_LIMIT)
+
+def rate_limited_request(url, params=None, retries=3, timeout=10, limit=API_LIMIT):
+    """
+    Realiza una solicitud HTTP con manejo de errores y reintentos, respetando
+    la tasa de solicitudes. Utiliza un semáforo (semaphore) para limitar la
+    cantidad de solicitudes concurrentes que pueden realizarse hacia la API
+    externa.
+    
+    Args:
+        url (str): URL del endpoint.
+        params (dict): Parámetros para la solicitud.
+        retries (int): Número de reintentos en caso de error.
+        timeout (int): Tiempo máximo de espera para la solicitud.
+        limit (int): Límite de solicitudes por segundo.
+    
+    Returns:
+        dict: Respuesta JSON.
+    """
+    for attempt in range(retries):
+        with semaphore:  # Asegura que no excedemos el límite de tasa
+            try:
+                response = requests.get(url, params=params, timeout=timeout)
+                response.raise_for_status()
+                return response.json()
+            except requests.RequestException as e:
+                if attempt < retries - 1:
+                    time.sleep(1)  # Esperar antes del siguiente intento
+                else:
+                    raise e
 
 def get_user_latitude_longitude(user_id: int):
     """
@@ -12,7 +47,8 @@ def get_user_latitude_longitude(user_id: int):
     Returns:
         dict: Un diccionario con las llaves 'latitude', 'longitude' y el id del usuario.
     """
-    response = requests.get('https://sccr8pgns0.execute-api.us-east-1.amazonaws.com/dev/locations/' + str(user_id))
+    url = 'https://sccr8pgns0.execute-api.us-east-1.amazonaws.com/dev/locations/' + str(user_id)
+    response = rate_limited_request(url)
     data = response.json()['data']
     latitude = float(data['latitude']['N'])
     longitude = float(data['longitude']['N'])
