@@ -49,7 +49,7 @@ def get_user_latitude_longitude(user_id: int):
     """
     url = 'https://sccr8pgns0.execute-api.us-east-1.amazonaws.com/dev/locations/' + str(user_id)
     response = rate_limited_request(url)
-    data = response.json()['data']
+    data = response['data']
     latitude = float(data['latitude']['N'])
     longitude = float(data['longitude']['N'])
     
@@ -95,7 +95,7 @@ def haversine(lat1, lon1, lats, lons, radius=6371):
     delta_lat = lats - lat1
     delta_lon = lons - lon1
     
-    a = np.sin(delta_lat / 2)**2 + np.cos(lat1) * np.cos(lats) * np.sin(delta_lon / 2)**2
+    a = np.sin(delta_lat / 2) ** 2 + np.cos(lat1) * np.cos(lats) * np.sin(delta_lon / 2) ** 2
     c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
     
     # distancia final en kms
@@ -111,7 +111,7 @@ def find_nearest_airport(user_id: int):
         user_id (int): El id del usuario.
         
     Returns:
-        dict: Un diccionario con las llaves 'id', 'name' y 'distance' del aeropuerto más cercano.    
+        dict: Un diccionario con las llaves 'airport_id', 'airport_name' y 'distance' del aeropuerto más cercano.    
     """
     user_location = get_user_latitude_longitude(user_id)
     user_lat = user_location['latitude']

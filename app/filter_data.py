@@ -13,6 +13,7 @@ def filter_airports(dataframe, column_name='wikipedia_link'):
         DataFrame: El dataset filtrado.
     """
     filtered_df = dataframe[dataframe[column_name].notna() & (dataframe[column_name] != '')]
+    
     return filtered_df
 
 if __name__ == '__main__':
