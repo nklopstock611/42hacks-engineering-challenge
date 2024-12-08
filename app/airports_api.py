@@ -32,7 +32,7 @@ def warm_up_server():
     Warm-up function that makes a request to the server and checks if it's running.
     """
     time.sleep(2)
-    BASE_PATH = "http://127.0.0.1:8000"
+    BASE_PATH = "https://four2hacks-engineering-challenge.onrender.com"
     try:
         response = requests.get(BASE_PATH + "/nearest_airports/1") # request de "calentamiento"
         if response.status_code == 200:

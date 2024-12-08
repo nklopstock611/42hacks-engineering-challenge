@@ -75,7 +75,7 @@ def haversine(lat1, lon1, lats, lons, radius=6378) -> np.array:
 
 def find_nearest_airport(user_id: int) -> dict:
     """
-    Uses numpy to find the nearest airport to a user, given their id.   
+    Uses numpy to find the nearest airport to a user given their id.   
     """
     user_location = get_user_latitude_longitude(user_id)
     user_lat = user_location['latitude']
@@ -92,6 +92,8 @@ def find_nearest_airport(user_id: int) -> dict:
     
     # looks for the index of the nearest airport
     min_idx = np.argmin(distances)
+    
+    print(f"User {user_id} (LAT: {user_lat}, LON: {user_lon}) - Nearest airport: {ids[min_idx]} - {names[min_idx]} - Distance: {distances[min_idx]} km (LAN: {lats[min_idx]}, LON: {lons[min_idx]})")
     
     return {
         'airport_id': int(ids[min_idx]),
