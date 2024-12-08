@@ -1,5 +1,7 @@
+redis
 numpy
 pandas
+orjson
 fastapi
 uvicorn
 requests

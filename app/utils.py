@@ -14,16 +14,6 @@ def rate_limited_request(url, params=None, retries=3, timeout=10, limit=API_LIMI
     la tasa de solicitudes. Utiliza un semáforo (semaphore) para limitar la
     cantidad de solicitudes concurrentes que pueden realizarse hacia la API
     externa.
-    
-    Args:
-        url (str): URL del endpoint.
-        params (dict): Parámetros para la solicitud.
-        retries (int): Número de reintentos en caso de error.
-        timeout (int): Tiempo máximo de espera para la solicitud.
-        limit (int): Límite de solicitudes por segundo.
-    
-    Returns:
-        dict: Respuesta JSON.
     """
     for attempt in range(retries):
         with semaphore:  # Asegura que no excedemos el límite de tasa

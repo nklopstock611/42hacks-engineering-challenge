@@ -2,7 +2,7 @@ import time
 from sqlmodel import Session, SQLModel, create_engine
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import app.config as config
+import config as config
 import app.utils as app_utils
 import database.utils as db_utils
 
@@ -10,7 +10,12 @@ API_LIMIT = 60  # Límite de solicitudes por segundo
 BATCH_SIZE = 1000  # Tamaño de los lotes para la base de datos
 RETRY_LIMIT = 3  # Número de reintentos en caso de error
 
-engine = create_engine(config.DB_URL)
+engine = create_engine(
+    config.DB_URL,
+    pool_size=10,
+    max_overflow=20,
+    pool_timeout=30,
+)
 
 def create_db_and_tables(engine_):
     SQLModel.metadata.create_all(engine_)
