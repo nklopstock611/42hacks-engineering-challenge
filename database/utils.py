@@ -4,44 +4,35 @@ import pandas as pd
 from sqlalchemy.sql import text
 from sqlalchemy.orm import Session
 
-from database.models import AirportWikiLink, NearestAirport
-
-def insert_data(session: Session, user_id: int, airport_id: int):
+def filter_airports(dataframe: pd.DataFrame, column_name='wikipedia_link'):
+    """    
+    Filters the rows of the "dataframe" dataset that do not have a value in the "column_name" column.
+    In this particular case, it filters the airports that do not have a link to Wikipedia.
     """
-    Inserta un nuevo registro en la tabla de usuarios - aeropuerto.
-    """
-    pair = NearestAirport(
-        user_id=user_id,
-        airport_id=airport_id
-    )
-    try:     
-        session.add(pair)
-        session.commit()
-        session.refresh(pair)
-        print("Insert successful!")
-    except Exception as e:
-        print(f"Error: {e}")
+    filtered_df = dataframe[dataframe[column_name].notna() & (dataframe[column_name] != '')]
+    
+    return filtered_df
 
 def insert_bulk_data(session: Session, data_batch: list, table: str, col1: str, col2: str, temp_file="temp_data.csv"):
     """
-    Inserta un lote de datos en la tabla NearestAirport utilizando el comando COPY de PostgreSQL.
+    Inserts a batch of data into "table" using the PostgreSQL COPY command.
     """
     if not data_batch:
-        print("No hay datos para insertar.")
+        print("No data to insert.")
         return
 
-    # Escribir los datos en un archivo CSV temporal
+    # uses a temp CSV file to store the data
     try:
         with open(temp_file, mode='w', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow([col1, col2])  # Escribe los encabezados
+            writer.writerow([col1, col2])
             for record in data_batch:
                 writer.writerow([record[col1], record[col2]])
 
-        print(f"Archivo temporal creado con {len(data_batch)} registros.")
-
-        # Usar el comando COPY para insertar los datos desde el archivo
-        # Este comando hace más eficiente la inserción de grandes volúmenes de datos
+        print(f"Temp file created with {len(data_batch)} rows.")
+        
+        # uses the COPY instruction to insert data from the CSV file
+        # This instruction is more efficient for inserting large volumes of data
         connection = session.connection().connection
         with open(temp_file, mode='r', encoding='utf-8') as csvfile:
             cursor = connection.cursor()
@@ -52,27 +43,27 @@ def insert_bulk_data(session: Session, data_batch: list, table: str, col1: str, 
             """
             cursor.copy_expert(query, csvfile)
         session.commit()
-        print(f"Insertados {len(data_batch)} registros en la tabla NearestAirport.")
+        print(f"{len(data_batch)} inserted rows into {table}.")
     except Exception as e:
         session.rollback()
-        print(f"Error durante la inserción masiva: {e}")
+        print(f"Error while inserting in bulk mode: {e}")
     finally:
-        # Elimina el archivo temporal
+        # removes the temp file
         if os.path.exists(temp_file):
             os.remove(temp_file)
 
-def get_wiki_data(airports_file="data/airports_w_wiki.csv"):
+def get_wiki_data(airports_file="data/airports_w_wiki.csv") -> list:
     """
-    Retorna un arreglo de diccionarios con los datos de aeropuertos y sus enlaces a Wikipedia.
+    Returns an array of dictionaries with the data of airports and their Wikipedia links.
     """
     airports = pd.read_csv(airports_file)
-    data = [{"airport_id": row["id"], "wikipedia_link": row["wikipedia_link"]} for _, row in airports.iterrows()]
+    data = [ { "airport_id": row["id"], "wikipedia_link": row["wikipedia_link"] } for _, row in airports.iterrows() ]
     
     return data
 
-def create_index(session, table, column):
+def create_index(session: Session, table: str, column: str):
     """
-    Crea un índice en la columna user_id de la tabla nearest_airport.
+    Creates an index on one column in a table.
     """
     index_name = f"idx_{column}"
     try:
@@ -81,14 +72,14 @@ def create_index(session, table, column):
         """
         session.execute(text(query))
         session.commit()
-        print("Índice creado exitosamente")
+        print("Index created successfully.")
     except Exception as e:
-        print(f"Error al crear el índice: {e}")
+        print(f"Error when creating index: {e}")
         session.rollback()
 
-def get_user_airport(session, user_id):
+def get_user_airport(session: Session, user_id: int) -> int:
     """
-    Query para obtener el aeropuerto más cercano a un usuario.
+    Query to get the nearest airport to a user.
     """
     query = text("""
         SELECT airport_id 
@@ -96,11 +87,12 @@ def get_user_airport(session, user_id):
         WHERE user_id = :user_id
     """)
     result = session.execute(query, { "user_id": user_id }).fetchone()
+    
     return result[0] if result else None
 
-def get_airports_wiki_link(session, airport_id):
+def get_airports_wiki_link(session: Session, airport_id: int) -> str:
     """
-    Query para obtener el enlace a Wikipedia de un aeropuerto.
+    Query to get the Wikipedia link of an airport.
     """
     query = text("""
         SELECT wikipedia_link 
@@ -108,4 +100,5 @@ def get_airports_wiki_link(session, airport_id):
         WHERE airport_id = :airport_id
     """)
     result = session.execute(query, { "airport_id": airport_id }).fetchone()
+    
     return result[0] if result else None

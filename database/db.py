@@ -1,4 +1,5 @@
 import time
+import pandas
 from sqlmodel import Session, SQLModel, create_engine
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -6,9 +7,9 @@ import config as config
 import app.utils as app_utils
 import database.utils as db_utils
 
-API_LIMIT = 60  # Límite de solicitudes por segundo
-BATCH_SIZE = 1000  # Tamaño de los lotes para la base de datos
-RETRY_LIMIT = 3  # Número de reintentos en caso de error
+API_LIMIT = 60  # Request limit per second
+BATCH_SIZE = 1000  # Batch size for database insert
+RETRY_LIMIT = 3  # Number of retries before giving up
 
 engine = create_engine(
     config.DB_URL,
@@ -24,27 +25,48 @@ def process_user(user_id):
     for attempt in range(1, RETRY_LIMIT + 1):
         try:
             airport_id = app_utils.find_nearest_airport(user_id)['airport_id']
-            print(f"Usuario {user_id} procesado: Aeropuerto más cercano {airport_id}")
+            print(f"User {user_id} processed: Nearest airport {airport_id}")
             return {"user_id": user_id, "airport_id": airport_id}
         except Exception as e:
-            print(f"Intento {attempt} fallido para usuario {user_id}: {e}")
-            time.sleep(1)  # Espera antes de reintentar
-    print(f"Usuario {user_id} falló después de {RETRY_LIMIT} intentos.")
+            print(f"Attempt {attempt} failed for user {user_id}: {e}")
+            time.sleep(1)  # wait before retrying
+    print(f"User {user_id} failed after {RETRY_LIMIT} attempts.")
     return None
 
 def batch_insert_to_db(data_batch):
     try:
         with Session(engine) as session:
             db_utils.insert_bulk_data(session, data_batch, 'nearestairport', 'user_id', 'airport_id')
-        print(f"Lote de {len(data_batch)} usuarios insertado en la base de datos.")
+        print(f"Batch with containing {len(data_batch)} users inserted into data base.")
     except Exception as e:
-        print(f"Error al insertar el lote en la base de datos: {e}")
+        print(f"Error when inserting into data base: {e}")
 
 if __name__ == "__main__":
+    # ============= #
+    # CSV FILTERING #
+    # ============= #
+    
+    print('Filtering airports...')
+    
+    df = pandas.read_csv('data/airports.csv')
+    df = db_utils.filter_airports(df)
+    df.to_csv('data/airports_w_wiki.csv', index=False)
+    
+    print('Airports filtered and new CSV filed created.')
+    
+    # =============== #
+    # SCHEMA CREATION #
+    # =============== #
+    
+    print('Creating schema...')
     create_db_and_tables(engine)
-    print('Base de datos y tablas creadas.')
+    print('Schema created.')
 
-    # Carga de datos de usuarios
+    # ================================== #
+    # USER - NEAREST AIRPORT TABLES LOAD #
+    # ================================== #
+
+    print('Loading nearest airports into the database...')
 
     user_ids = range(1, 100001)
     results = []
@@ -58,37 +80,46 @@ if __name__ == "__main__":
             if result:
                 results.append(result)
 
-            # Control de tasa (rate limiting)
+            # rate limit control
             if len(results) % API_LIMIT == 0:
                 elapsed = time.time() - start_time
                 if elapsed < 1:
                     time.sleep(1 - elapsed)
                 start_time = time.time()
 
-            # Insertar en la base de datos en lotes
+            # inserts in batches
             if len(results) >= BATCH_SIZE:
                 batch_insert_to_db(results)
                 results.clear()
 
-    # Insertar los datos restantes
+    # insert remaining results
     if results:
         batch_insert_to_db(results)
 
-    print('Datos insertados en la base de datos.')
+    print('Data successfully loaded into the database.')
     
-    # Carga de enlaces de Wikipedia
+    # ==================================== #
+    # AIRPORT - WIKIPEDIA LINKS TABLE LOAD #
+    # ==================================== #
     
-    print('Cargando enlaces de Wikipedia en la base de datos...')
+    print('Loading Wikipedia links into the database...')
     
     with Session(engine) as session:
         db_utils.insert_bulk_data(session, db_utils.get_wiki_data(), 'airportwikilink', 'airport_id', 'wikipedia_link')
         
-    print('Enlaces de Wikipedia cargados en la base de datos.')
+    print('Wikipedia links successfully loaded into the database.')
     
-    # Creación de índices
+    # ================ #
+    # Indexes creation #
+    # ================ #
+    
+    print('Creating indexes...')
     
     with Session(engine) as session:
+        # an index for the user_id column in the nearestairport table -> reduces the time to find the wanted user
         db_utils.create_index(session, "nearestairport", "user_id")
+        
+        # an index for the airport_id column in the airportwikilink table -> reduces the time to find the wanted airport
         db_utils.create_index(session, "airportwikilink", "airport_id")
         
-    print('Índices creados.')
+    print('Indexes successfully created.')

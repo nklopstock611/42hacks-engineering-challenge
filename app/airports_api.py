@@ -3,7 +3,6 @@ import requests
 from fastapi import FastAPI
 from sqlmodel import Session
 from threading import Thread
-from functools import lru_cache
 from contextlib import asynccontextmanager
 from fastapi.responses import ORJSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,11 +27,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/healthcheck")
-def healthcheck():
-    return {"status": "ok"}
-
 def warm_up_server():
+    """
+    Warm-up function that makes a request to the server and checks if it's running.
+    """
     time.sleep(2)
     BASE_PATH = "http://127.0.0.1:8000"
     try:
@@ -46,6 +44,9 @@ def warm_up_server():
 
 @app.get("/nearest_airports/{user_id}")
 def get_nearest_airport_for_user(user_id: int):
+    """
+    Endpoint that returns the nearest airport to a user given their id.
+    """
     with Session(engine) as session:
         nearest = db_utils.get_user_airport(session, user_id)
         
@@ -53,6 +54,10 @@ def get_nearest_airport_for_user(user_id: int):
 
 @app.get("/nearest_airports_wikipedia/{user_id}")
 def get_nearest_airports_for_user_wikipedia(user_id: int):
+    """
+    Endpoint that returns the Wikipedia page link of the nearest airport
+    to a user given their id.
+    """
     with Session(engine) as session:
         nearest = db_utils.get_user_airport(session, user_id)
         
