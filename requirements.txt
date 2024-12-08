@@ -1,5 +1,7 @@
-requests
-pandas
 numpy
+pandas
 fastapi
 uvicorn
+requests
+sqlmodel
+psycopg2

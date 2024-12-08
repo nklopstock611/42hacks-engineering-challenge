@@ -30,7 +30,7 @@ def process_user(user_id):
 def batch_insert_to_db(data_batch):
     try:
         with Session(engine) as session:
-            db_utils.insert_bulk_data(session, data_batch)
+            db_utils.insert_bulk_data(session, data_batch, 'nearestairport', 'user_id', 'airport_id')
         print(f"Lote de {len(data_batch)} usuarios insertado en la base de datos.")
     except Exception as e:
         print(f"Error al insertar el lote en la base de datos: {e}")
@@ -38,6 +38,8 @@ def batch_insert_to_db(data_batch):
 if __name__ == "__main__":
     create_db_and_tables(engine)
     print('Base de datos y tablas creadas.')
+
+    # Carga de datos de usuarios
 
     user_ids = range(1, 100001)
     results = []
@@ -68,8 +70,20 @@ if __name__ == "__main__":
         batch_insert_to_db(results)
 
     print('Datos insertados en la base de datos.')
-
+    
+    # Carga de enlaces de Wikipedia
+    
+    print('Cargando enlaces de Wikipedia en la base de datos...')
+    
     with Session(engine) as session:
-        db_utils.create_user_id_index(session)
+        db_utils.insert_bulk_data(session, db_utils.get_wiki_data(), 'airportwikilink', 'airport_id', 'wikipedia_link')
         
-    print('Índice creado en la base de datos.')
+    print('Enlaces de Wikipedia cargados en la base de datos.')
+    
+    # Creación de índices
+    
+    with Session(engine) as session:
+        db_utils.create_index(session, "nearestairport", "user_id")
+        db_utils.create_index(session, "airportwikilink", "airport_id")
+        
+    print('Índices creados.')
