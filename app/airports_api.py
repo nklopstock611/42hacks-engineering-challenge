@@ -15,7 +15,6 @@ async def lifespan(app: FastAPI):
     print("Starting the application...")
     Thread(target=warm_up_server).start()
     yield
-    print("Shutting down the application...")
 
 app = FastAPI(default_response_class=ORJSONResponse, lifespan=lifespan)
 
@@ -41,6 +40,10 @@ def warm_up_server():
             print(f"Warm-up request failed with status code: {response.status_code}")
     except Exception as e:
         print(f"Error warming up the server: {e}")
+
+@app.get("/")
+def read_root():
+    return { 'message': 'Welcome to the airports API!' }
 
 @app.get("/nearest_airports/{user_id}")
 def get_nearest_airport_for_user(user_id: int):
