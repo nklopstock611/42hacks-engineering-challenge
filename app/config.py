@@ -1,0 +1,1 @@
+DB_URL = "postgresql+psycopg2://postgres.hdpfvpoeoyjressnyhqx:42hacks2024!@aws-0-us-west-1.pooler.supabase.com:6543/postgres"
