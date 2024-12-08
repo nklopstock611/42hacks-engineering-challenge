@@ -44,7 +44,6 @@ def warm_up_server():
     except Exception as e:
         print(f"Error warming up the server: {e}")
 
-@lru_cache(maxsize=1000)
 @app.get("/nearest_airports/{user_id}")
 def get_nearest_airport_for_user(user_id: int):
     with Session(engine) as session:
