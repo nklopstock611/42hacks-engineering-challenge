@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
     print('Loading nearest airports into the database...')
 
-    user_ids = range(1, 100001)
+    user_ids = range(0, 100000) # for all 100_000 users
     results = []
     start_time = time.time()
 

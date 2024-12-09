@@ -36,12 +36,12 @@ def test_distance_calculation(user_id: int):
 
 def test_root():
     start_time = time.time()
-    response = requests.get(BASE_PATH + '/')
+    requests.get(BASE_PATH + '/')
     delta_time = time.time() - start_time
     print(f"Tiempo de respuesta para '/': {delta_time:.4f} segundos")
     
 if __name__ == "__main__":
-    user_id = 99999
+    user_id = 0
     test_root()
     test_distance_calculation(user_id)
     test_endpoints(user_id)
