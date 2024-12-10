@@ -10,3 +10,4 @@ https://github.com/Un-Real-AI/data_engineering_challenge
 4. Run API `python -m uvicorn app.airports_api:app`
 
 Deployed on: https://four2hacks-engineering-challenge.onrender.com
+Because it is a free service, the first reuqest may have a 50s re-activation delay...
