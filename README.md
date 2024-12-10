@@ -11,4 +11,6 @@ https://github.com/Un-Real-AI/data_engineering_challenge
 
 Deployed on: https://four2hacks-engineering-challenge.onrender.com
 
-Because it is a free service, the first reuqest may have a 50s re-activation delay...
+Because it is a free service, the first request may have a 50s re-activation delay and an error response...
+
+It is recommended to run the API locally and test on localhost.
