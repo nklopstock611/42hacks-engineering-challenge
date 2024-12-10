@@ -1,1 +1,2 @@
+# THIS FILE SHOULD BE IN THE .GITIGNORE! I left it here if you want to check out the database
 DB_URL = "postgresql+psycopg2://postgres.hdpfvpoeoyjressnyhqx:42hacks2024!@aws-0-us-west-1.pooler.supabase.com:6543/postgres"

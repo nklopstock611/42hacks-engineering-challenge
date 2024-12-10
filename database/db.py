@@ -3,7 +3,7 @@ import pandas
 from sqlmodel import Session, SQLModel, create_engine
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import config as config
+import config
 import app.utils as app_utils
 import database.utils as db_utils
 
@@ -12,10 +12,7 @@ BATCH_SIZE = 1000  # Batch size for database insert
 RETRY_LIMIT = 3  # Number of retries before giving up
 
 engine = create_engine(
-    config.DB_URL,
-    pool_size=10,
-    max_overflow=20,
-    pool_timeout=30,
+    "postgresql+psycopg2://postgres.hdpfvpoeoyjressnyhqx:42hacks2024!@aws-0-us-west-1.pooler.supabase.com:6543/postgres"
 )
 
 def create_db_and_tables(engine_):
@@ -42,6 +39,8 @@ def batch_insert_to_db(data_batch):
         print(f"Error when inserting into data base: {e}")
 
 if __name__ == "__main__":
+    s_time = time.time()
+
     # ============= #
     # CSV FILTERING #
     # ============= #
@@ -59,9 +58,10 @@ if __name__ == "__main__":
     # =============== #
     
     print('Creating schema...')
-    create_db_and_tables(engine)
-    print('Schema created.')
 
+    create_db_and_tables(engine)
+
+    time.sleep(5)
     # ================================== #
     # USER - NEAREST AIRPORT TABLES LOAD #
     # ================================== #
@@ -123,3 +123,7 @@ if __name__ == "__main__":
         db_utils.create_index(session, "airportwikilink", "airport_id")
         
     print('Indexes successfully created.')
+
+    delta_time = time.time() - s_time
+
+    print(f'TIME: {delta_time}s')

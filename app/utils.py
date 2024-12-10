@@ -93,7 +93,7 @@ def find_nearest_airport(user_id: int) -> dict:
     # looks for the index of the nearest airport
     min_idx = np.argmin(distances)
     
-    print(f"User {user_id} (LAT: {user_lat}, LON: {user_lon}) - Nearest airport: {ids[min_idx]} - {names[min_idx]} - Distance: {distances[min_idx]} km (LAN: {lats[min_idx]}, LON: {lons[min_idx]})")
+    # print(f"User {user_id} (LAT: {user_lat}, LON: {user_lon}) - Nearest airport: {ids[min_idx]} - {names[min_idx]} - Distance: {distances[min_idx]} km (LAN: {lats[min_idx]}, LON: {lons[min_idx]})")
     
     return {
         'airport_id': int(ids[min_idx]),
